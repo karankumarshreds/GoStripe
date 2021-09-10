@@ -4,6 +4,7 @@ import (
 	"os"
 	"log"
 	"flag"
+	"net/http"
 	"database/sql"
 	"html/template"
 	"github.com/gorilla/mux"
@@ -14,7 +15,7 @@ const version = "1.0.0"
 type Application struct {
 
 	config struct {
-		port int         // to be read from the command line flag 
+		port string      // to be read from the command line flag 
 		env string       // to be read from the command line flag 
 		api string       // to be read from the command line flag 
 
@@ -38,7 +39,7 @@ type Application struct {
 func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_NAME string) {
 	cfg := app.config
 	// Defining command line flags to (used as --port <value>)
-	flag.IntVar(&cfg.port, "port", 8000, "Server port to listen on")
+	flag.StringVar(&cfg.port, "port", "8000", "Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "development", "Application environment {development|production}")
 	flag.StringVar(&cfg.api, "api", "http://localhost:4000", "URL to api")
 	// Parse parses the command-line flags from os.Args[1:]
@@ -57,4 +58,10 @@ func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_N
 	app.Router         = mux.NewRouter()
 	app.templateCache  = tc
 	app.version        = version
+
+	app.InitializeRoutes()
+}
+
+func (app *Application) Run() {
+	http.ListenAndServe(":" + (app.config.port), app.Router)
 }
