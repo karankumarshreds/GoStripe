@@ -63,5 +63,8 @@ func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_N
 }
 
 func (app *Application) Run() {
-	http.ListenAndServe(":" + (app.config.port), app.Router)
+	err := http.ListenAndServe(":" + (app.config.port), app.Router)
+	if err != nil {
+		app.errorLog.Fatalf("Error while listening on port %v \n %v", app.config.port, err)
+	}
 }
