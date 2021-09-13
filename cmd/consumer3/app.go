@@ -41,7 +41,7 @@ type Application struct {
 func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_NAME string) {
 	cfg := app.config
 	// Defining command line flags to (used as --port <value>)
-	flag.StringVar(&cfg.port, "port", "8001", "Server port to listen on")
+	flag.StringVar(&cfg.port, "port", "8003", "Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "development", "Application environment {development|production}")
 	flag.StringVar(&cfg.api, "api", "http://localhost:4000", "URL to api")
 	// Parse parses the command-line flags from os.Args[1:]
@@ -69,19 +69,19 @@ func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_N
 	ch, err := conn.Channel()
 	app.logForError("Failed to open a channel", err)
 
-	err = ch.ExchangeDeclare(
-		"logs_diff",   // name
-		"fanout", // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // aruments
-	)
-	app.logForError("Failed to declare an exchange", err)
+	// err = ch.ExchangeDeclare(
+	// 	"logs",   // name
+	// 	"fanout", // type
+	// 	true,     // durable
+	// 	false,    // auto-deleted
+	// 	false,    // internal
+	// 	false,    // no-wait
+	// 	nil,      // arguments
+	// )
+	// app.logForError("Failed to declare an exchange", err)
 
 	q, err := ch.QueueDeclare(
-		"consumer1",    // name
+		"consumer2",    // name
 		false, // durable
 		false, // delete when unused
 		false,  // exclusive
@@ -89,16 +89,17 @@ func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_N
 		nil,   // arguments
 	)
 	app.logForError("Failed to declare queue", err)
+	 
+	// err = ch.QueueBind(
+	// 	q.Name, // queue name
+	// 	"",     // routing key
+	// 	"logs", // exchange
+	// 	false,
+	// 	nil,
+	// )
+	// app.logForError("Failed to bind to queue", err)
 
-	err = ch.QueueBind(
-		q.Name,
-		"key1232",
-		"logs_diff",
-		false,
-		nil,
-	)
-	app.logForError("Failed to bind to queue", err)
-	
+
 	msgs, err := ch.Consume(
 		q.Name,
 		"",

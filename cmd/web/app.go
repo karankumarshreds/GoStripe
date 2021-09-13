@@ -80,7 +80,7 @@ func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_N
 	app.logForError("Failed to declare an exchange", err)
 
 	q, err := ch.QueueDeclare(
-		"log-queue",    // name
+		"",    // name
 		false, // durable
 		false, // delete when unused
 		false,  // exclusive
@@ -91,7 +91,7 @@ func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_N
 
 	err = ch.QueueBind(
 		q.Name, // queue name
-		"",     // routing key
+		"key123",     // routing key
 		"logs", // exchange
 		false,
 		nil,

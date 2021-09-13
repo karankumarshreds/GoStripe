@@ -69,19 +69,19 @@ func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_N
 	ch, err := conn.Channel()
 	app.logForError("Failed to open a channel", err)
 
-	err = ch.ExchangeDeclare(
-		"logs",   // name
-		"fanout", // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
-	)
-	app.logForError("Failed to declare an exchange", err)
+	// err = ch.ExchangeDeclare(
+	// 	"logs",   // name
+	// 	"fanout", // type
+	// 	true,     // durable
+	// 	false,    // auto-deleted
+	// 	false,    // internal
+	// 	false,    // no-wait
+	// 	nil,      // arguments
+	// )
+	// app.logForError("Failed to declare an exchange", err)
 
 	q, err := ch.QueueDeclare(
-		"log-queue",    // name
+		"consumer2",    // name
 		false, // durable
 		false, // delete when unused
 		false,  // exclusive
@@ -89,6 +89,14 @@ func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_N
 		nil,   // arguments
 	)
 	app.logForError("Failed to declare queue", err)
+	// err = ch.QueueBind(
+	// 	q.Name, // queue name
+	// 	"",     // routing key
+	// 	"logs", // exchange
+	// 	false,
+	// 	nil,
+	// )
+	// app.logForError("Failed to bind to queue", err)
 
 
 	msgs, err := ch.Consume(
@@ -100,6 +108,7 @@ func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_N
 		false,
 		nil,
 	)
+	
 	app.logForError("Unable to consume message", err)
 	app.infoLog.Printf("Consumed message %v", msgs)
 
