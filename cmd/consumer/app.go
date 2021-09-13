@@ -41,7 +41,7 @@ type Application struct {
 func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_NAME string) {
 	cfg := app.config
 	// Defining command line flags to (used as --port <value>)
-	flag.StringVar(&cfg.port, "port", "8000", "Server port to listen on")
+	flag.StringVar(&cfg.port, "port", "8001", "Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "development", "Application environment {development|production}")
 	flag.StringVar(&cfg.api, "api", "http://localhost:4000", "URL to api")
 	// Parse parses the command-line flags from os.Args[1:]
@@ -68,6 +68,7 @@ func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_N
 	
 	ch, err := conn.Channel()
 	app.logForError("Failed to open a channel", err)
+
 	err = ch.ExchangeDeclare(
 		"logs",   // name
 		"fanout", // type
@@ -89,16 +90,28 @@ func (app *Application) Initialize(STRIPE_KEY string, STRIPE_SECRET string, DB_N
 	)
 	app.logForError("Failed to declare queue", err)
 
-	err = ch.QueueBind(
-		q.Name, // queue name
-		"",     // routing key
-		"logs", // exchange
+
+	msgs, err := ch.Consume(
+		q.Name,
+		"",
+		true,
+		false,
+		false,
 		false,
 		nil,
 	)
-	app.logForError("Failed to bind to queue", err)
+	app.logForError("Unable to consume message", err)
+	app.infoLog.Printf("Consumed message %v", msgs)
 
-	app.Channel = ch
+	forever := make(chan bool)
+	go func() {
+		for d := range msgs {
+			log.Printf(" [x] %s", string(d.Body))
+		}
+	}()
+
+	log.Printf(" [*] Waiting for logs. To exit press CTRL+C")
+	<-forever
 	
 	app.InitializeRoutes()
 }
